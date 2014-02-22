@@ -1,0 +1,204 @@
+ ' Write Data Model Dictionary into word  document
+ ' in hierarchical order with their names. 
+ ' You'll probably need to 
+ ' change the template and output filenames. 
+ ' Author Shreedhara C.A.  
+
+
+Const vbCr$ = Chr$(13)
+Const vbLf$ = Chr$(10)
+Const vbCrLf$ = vbCr$ + vbLf$
+Const vbTab$ = Chr$(9)
+Const vbNL$ = Chr$(11)
+const PublicAccess$ = "PublicAccess"
+const ProtectedAccess$ = "ProtectedAccess"
+const PrivateAccess$ = "PrivateAccess"
+
+Const none$ = ""
+
+const cg$ = "cg"
+const Datascope$ = "Datascope"
+
+const inLabel$ =			"In"
+const outLabel$ = 			"Out"
+const inOutLabel$ =			"InOut"
+
+const returnValuesLabel$ = 	"ReturnValues"
+
+ Const namePrefix = "Design View::" 
+ Const toolName = "DictateDataModel" 
+ Const TemplateFileName ="normal.dot"
+ 'Const SaveFileName ="D:\RoseDocs\DataModelDict.doc"
+
+ Sub CopyDiagram(wordApp As Object, diagram As Diagram) 
+
+	Dim theClassDiagram As ClassDiagram
+	Dim theSeqDiagram As ScenarioDiagram
+	Dim theClasses As ClassCollection
+	Dim theColumns As ClassCollection
+
+	Dim theClass As Class
+	Dim theSubClass As Class
+	Dim AllScenarioDiagrams As ScenarioDiagramCollection
+	Dim AllObjectInstances As ObjectInstanceCollection
+	Dim AllClassDiagrams As ClassDiagramCollection
+	Dim theObjectInstance As ObjectInstance
+	Dim theAttributes As New AttributeCollection
+	Dim theAttribute As Attribute
+	 Dim theParameters As ParameterCollection
+	 Dim theParameter1 As Parameter
+	Dim op As Operation
+	Dim i As Integer, j As Integer
+	Dim str As String
+
+	WordApp.FormatStyle "Heading 3"
+    wordApp.Insert diagram.Name
+	WordApp.InsertPara
+    diagram.RenderEnhancedToClipBoard 
+    wordApp.EditPaste 
+
+			If diagram.CanTypeCast(theClassDiagram) Then
+  				Set theClassDiagram = diagram.TypeCast (theClassDiagram)
+				Set theClasses = theClassDiagram.GetClasses ()
+		
+				If(theClassDiagram.IsDataModelingDiagram) Then
+			
+				
+				WordApp.FormatStyle "Heading 3"
+				wordApp.Insert "TABLES INVLOVED"
+				WordApp.InsertPara  
+				
+				For j=1 To theClasses.Count			
+				
+					Set theClass = theClasses.GetAt(j)
+				    
+					For lineSeperator=1 To 80
+					WordApp.Insert "-"
+					Next lineSeperator
+					WordApp.InsertPara
+
+					WordApp.FormatStyle "Heading 3"	
+
+					wordApp.Insert  theClass.Name 
+					WordApp.InsertPara
+					WordApp.FormatStyle "Body Text"
+					wordApp.Insert theClass.Documentation
+					WordApp.InsertPara  
+
+
+					WordApp.FormatStyle "Heading 5"	
+
+					wordApp.Insert  "Attributes" 
+
+
+
+					For lineSeperator=1 To 80
+					WordApp.Insert "-"
+					Next lineSeperator
+					WordApp.InsertPara
+
+					
+					For k=1 To theClass.Attributes.count
+					
+					Set theAttribute = theClass.Attributes.getAt(k)
+					
+					WordApp.FormatStyle "Body Text"
+    				WordApp.Insert theAttribute.Name +" : "+theAttribute.Type+":"+theAttribute.Documentation 
+					WordApp.InsertPara
+
+					Next k
+
+					WordApp.FormatStyle "Heading 5"	
+
+					wordApp.Insert  "Operations" 
+
+
+
+					For lineSeperator=1 To 80
+					WordApp.Insert "-"
+					Next lineSeperator
+					WordApp.InsertPara
+
+
+					For k=1 To theClass.Operations.count
+					
+					Set op = theClass.Operations.getAt(k)
+					
+					WordApp.FormatStyle "Body Text"
+    				WordApp.Insert op.Name +" : "+op.Documentation 
+					WordApp.InsertPara
+
+					Next k
+
+
+								
+			    Next j
+				
+				else
+				exit sub
+
+				End If
+				'Cycle through all the classes in a Class diagram
+				
+			End If
+
+			
+
+End Sub 
+
+Sub Main 
+        Dim wordApp As Object 
+		Dim colDiagrams As DiagramCollection
+		Dim theModel As Model
+        Set wordApp = CreateObject ("Word.Basic") 
+		Set theModel = RoseApp.CurrentModel	
+		Set colDiagrams = theModel.GetSelectedDiagrams ()
+		Dim filename As String
+		Dim theExtensions As String
+
+	theExtensions = "*.doc:*.doc" 
+
+
+
+
+
+
+
+		   If( colDiagrams.Count =0) Then
+
+			msgbox "Please Select a Diagram before running the Script" ,0,toolName 
+		   Else
+
+		filename = SaveFileName$("Save the rose Diagram File", theExtensions)
+		If filename = "" Then
+		Exit Sub
+		End If
+
+        wordApp.FileNew TemplateFileName 
+        wordApp.ViewPage 
+        'wordApp.AppMaximize 
+        wordApp.StartOfDocument 
+
+		  		For i=1 To colDiagrams.Count
+			Set theDiagram = colDiagrams.GetAt (i)
+
+		 CopyDiagram wordApp,colDiagrams.GetAt (i)
+		 Next i
+
+
+        wordApp.EndOfDocument 
+
+        wordApp.FileSaveAs filename
+
+        wordApp.AppMaximize 
+        wordApp.AppShow 
+
+ End If
+
+		msgbox toolName +" -- V 1.0 Tool By Shreedhara C A",0,toolName ,TRUE,0
+
+		
+		'wordApp.FileExit 
+
+
+ End Sub 

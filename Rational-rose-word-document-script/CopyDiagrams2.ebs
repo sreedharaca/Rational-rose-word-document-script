@@ -1,0 +1,124 @@
+ ' copy class diagrams into word 
+ ' copies all the class diagrams into MsWord 
+ ' hierarchical order with their names. 
+ ' You'll probably need to 
+ ' change the template and output filenames. 
+ ' Author Shreedhara C.A.  
+
+
+
+ Const namePrefix = "Design View::" 
+ Const toolName = "CopyDiagrams" 
+ Const TemplateFileName ="\Normal.dot"
+ 'Const TOSaveFileName ="D:\RoseDocs\RoseDiags.doc"
+
+ Sub CopyDiagram(wordApp As Object, diagram As Diagram) 
+
+	Dim theClassDiagram As ClassDiagram
+	Dim theSeqDiagram As ScenarioDiagram
+	Dim theClasses As ClassCollection
+	Dim theColumns As ClassCollection
+
+	Dim theClass As Class
+	Dim theSubClass As Class
+	Dim AllScenarioDiagrams As ScenarioDiagramCollection
+	Dim AllObjectInstances As ObjectInstanceCollection
+	Dim AllClassDiagrams As ClassDiagramCollection
+	Dim theObjectInstance As ObjectInstance
+	Dim idnt As String
+
+
+	WordApp.FormatStyle "Heading 3"
+    wordApp.Insert diagram.Name
+	WordApp.InsertPara
+    diagram.RenderEnhancedToClipBoard 
+    wordApp.EditPaste 
+	WordApp.InsertPara 
+
+			If diagram.CanTypeCast(theClassDiagram) Then
+  				Set theClassDiagram = diagram.TypeCast (theClassDiagram)
+				Set theClasses = theClassDiagram.GetClasses ()
+				idnt = "Class Name : "
+				If(theClassDiagram.IsDataModelingDiagram) Then
+			
+				idnt = "Table Name : "				
+				WordApp.FormatStyle "Heading 3"
+				wordApp.Insert "TABLES INVLOVED"
+				WordApp.InsertPara  
+
+				End If
+				'Cycle through all the classes in a Class diagram
+				For j=1 To theClasses.Count			
+					Set theClass = theClasses.GetAt(j)
+					
+						'WordApp.FormatStyle "Heading 3"
+						WordApp.Italic 1
+						wordApp.Insert  idnt + theClass.Name + "   "
+						WordApp.InsertPara 
+   						WordApp.Italic 0
+						WordApp.FormatStyle "Normal + Left:  0.5''"
+	   					wordApp.Insert theClass.Documentation
+						WordApp.InsertPara  
+
+								
+				Next j
+			End If
+
+			If diagram.CanTypeCast(theSeqDiagram) Then
+  				Set theSeqDiagram = diagram.TypeCast (theSeqDiagram)
+			  Set AllObjectInstances = theSeqDiagram.GetObjects		
+				'Cycle through all the classes in a Class diagram
+
+				For j=1 To AllObjectInstances.Count			
+					Set theObjectInstance = AllObjectInstances.GetAt(j)
+						WordApp.FormatStyle "Body Text"
+						wordApp.Insert  theObjectInstance.ClassName 
+						WordApp.InsertPara
+						wordApp.Insert theObjectInstance.Documentation
+						WordApp.InsertPara  
+				Next j
+
+			End If
+
+End Sub 
+
+Sub Main 
+        Dim wordApp As Object 
+		Dim colDiagrams As DiagramCollection
+		Dim theModel As Model
+        Set wordApp = CreateObject ("Word.Basic") 
+		Set theModel = RoseApp.CurrentModel	
+		Set colDiagrams = theModel.GetSelectedDiagrams ()
+		Dim filename As String
+
+		If colDiagrams.count=0 Then
+		MSGBOX "Please Select a Diagram to Copy"
+		Exit Sub
+		Else
+
+		filename = SaveFileName$("Save File name","*.doc:*.doc")
+        wordApp.FileNew TemplateFileName 
+        wordApp.ViewPage 
+        wordApp.AppMaximize 
+        wordApp.StartOfDocument 
+
+		For i=1 To colDiagrams.Count
+			Set theDiagram = colDiagrams.GetAt (i)
+
+		 CopyDiagram wordApp,colDiagrams.GetAt (i)
+		 Next i
+
+
+        wordApp.EndOfDocument 
+
+        wordApp.FileSaveAs filename
+
+        wordApp.AppMaximize 
+        wordApp.AppShow 
+		
+		MSGBOX "File Saved",0,"CopyDiag2Word v1.0  by Shreedhara",TRUE,0
+		
+		wordApp.FileExit 
+
+		End If
+ End Sub 
