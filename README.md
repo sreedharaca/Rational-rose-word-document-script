@@ -11,3 +11,5 @@ Developers can easily generate word documents from rational diagrams from ration
 
 Feel free to download and modify for your own use.
 
+
+Developed by Shreedhara C A
